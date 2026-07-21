@@ -279,7 +279,7 @@ local BOT_C  = CFG['General']['Bot Targeting']
 
 --  STATE
 local speedEnabled     = false
-local rapidFireEnabled  = false
+local rapidFireEnabled = (RF_C and RF_C['Enabled']) or false
 local isShutdown       = false
 local isMouseDown      = false
 local currentTarget    = nil   -- BasePart we are locked onto (for ESP highlight)
