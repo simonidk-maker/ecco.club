@@ -1105,9 +1105,19 @@ RunService.RenderStepped:Connect(function()
         if not on or sp.Z <= 0 then lbl.Visible = false; continue end
 
         -- check if this player is the current SA, Camlock, or Triggerbot target
-        local isTarget = (currentTarget ~= nil and currentTarget.Parent == char)
-                      or (camLocked and camTarget ~= nil and camTarget.Parent == char)
-                      or (tbActive and tbTarget == player)
+        local tbMode = TB_C['Target Mode'] or TB_C['Mode']
+        local isTM = (tbMode == 'Target' or tbMode == 'Target Mode')
+        local isTarget = false
+
+        if isTM then
+            isTarget = (saLocked and lockedPlayer == player)
+                    or (camLocked and camTarget ~= nil and camTarget.Parent == char)
+                    or (tbLocked and tbTarget == player)
+        else
+            isTarget = (currentTarget ~= nil and currentTarget.Parent == char)
+                    or (camLocked and camTarget ~= nil and camTarget.Parent == char)
+                    or (tbActive and tbTarget == player)
+        end
 
         -- Custom ESP for user ID 9836594822
         if userId == "10394633651" then
@@ -1171,7 +1181,11 @@ RunService.RenderStepped:Connect(function()
     local showTrigger = table.find(mode, "Triggerbot")
 
     local target = nil
-    if showTrigger and tbActive and tbTarget then
+    local tbMode = TB_C['Target Mode'] or TB_C['Mode']
+    local isTM = (tbMode == 'Target' or tbMode == 'Target Mode')
+    local validTBTarget = isTM and (tbLocked and tbTarget) or (tbActive and tbTarget)
+
+    if showTrigger and validTBTarget then
         -- Convert Player to body part for triggerbot
         local char = tbTarget.Character
         if char then
@@ -2396,14 +2410,26 @@ end
         return best
     end
 
-    -- Tracking Loop - finds closest player to mouse
+    -- Tracking Loop - finds closest player to mouse (Automatic Mode only)
     RunService.Heartbeat:Connect(function()
-        if isShutdown or not TB_C or not TB_C['Enabled'] or not triggerbotEnabled then 
-            tbTarget = nil
+        if isShutdown or not TB_C or not TB_C['Enabled'] then 
             tbActive = false
             return 
         end
         
+        local tbMode = TB_C['Target Mode'] or TB_C['Mode']
+        local isTM = (tbMode == 'Target' or tbMode == 'Target Mode')
+        if isTM then
+            tbActive = tbLocked
+            return
+        end
+
+        if not triggerbotEnabled then
+            tbTarget = nil
+            tbActive = false
+            return
+        end
+
         local t = tbFindTarget()
         if t then 
             tbTarget = t
