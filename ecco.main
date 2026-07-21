@@ -288,9 +288,10 @@ local lockedPlayer     = nil   -- the Player object that is locked
 local camLocked         = false
 local camTarget         = nil
 local tbActive          = false
+local tbLocked          = false
 local tbTarget          = nil
 local tbLastShot        = 0
-local triggerbotEnabled = false
+local triggerbotEnabled = (TB_C and TB_C['Enabled']) or false
 local superJumpEnabled  = false
 local spidermanEnabled  = false
 local flyEnabled        = false
@@ -1470,18 +1471,14 @@ do
                 end
             end
 
-            if SA_C['Enabled'] then addFeat("Silent", currentTarget and tname) end
+            if SA_C['Enabled'] then addFeat("Silent", saLocked and tname) end
             if CL_C['Enabled'] then addFeat("Camlock", camLocked and tname) end
+            if TB_C['Enabled'] then addFeat("Trigger", tbLocked and tname) end
             -- (Rapid Fire and Range omitted from HUD GUI display)
             if SM_C['Enabled'] then addFeat("Spread") end
             if SJ_C['Enabled'] and superJumpEnabled then addFeat("Jump") end
             if SP_C['Enabled'] and spidermanEnabled then addFeat("Spider") end
             if SPD_C['Enabled'] and speedEnabled then addFeat("Speed") end
-            if TB_C['Enabled'] and triggerbotEnabled then
-                local tbMode = TB_C['Target Mode'] or TB_C['Mode']
-                local isTM = (tbMode == 'Target' or tbMode == 'Target Mode')
-                addFeat("Trigger", isTM and (currentTarget or camTarget) and tname)
-            end
             if ESP_C['Enabled'] then addFeat("ESP") end
 
             if #activeFeatures > 0 then
@@ -2314,7 +2311,7 @@ UserInputService.InputBegan:Connect(function(input, gp)
 
     local tbMode = TB_C['Target Mode'] or TB_C['Mode']
     local isTM = (tbMode == 'Target' or tbMode == 'Target Mode')
-    local isAnyLocked = saLocked or camLocked or (TB_C['Enabled'] and isTM and triggerbotEnabled)
+    local isAnyLocked = saLocked or camLocked or tbLocked
 
     if isAnyLocked then
         -- UNLOCK ALL
@@ -2325,9 +2322,8 @@ UserInputService.InputBegan:Connect(function(input, gp)
         camLocked = false
         camTarget = nil
 
-        if isTM then
-            triggerbotEnabled = false
-        end
+        tbLocked = false
+        tbTarget = nil
     else
         -- LOCK ALL ONTO CLOSEST TARGET
         local targetPlayer = getClosestTarget()
@@ -2348,8 +2344,15 @@ UserInputService.InputBegan:Connect(function(input, gp)
         end
 
         if TB_C['Enabled'] and isTM then
-            if targetPlayer or camTargetPart then
-                triggerbotEnabled = true
+            if targetPlayer then
+                tbLocked = true
+                tbTarget = targetPlayer
+            elseif camTargetPart and camTargetPart.Parent then
+                local p = Players:GetPlayerFromCharacter(camTargetPart.Parent)
+                if p then
+                    tbLocked = true
+                    tbTarget = p
+                end
             end
         end
     end
@@ -2413,22 +2416,39 @@ end
 
     -- Triggerbot Fire Loop
     RunService.Heartbeat:Connect(function()
-        if isShutdown or not TB_C or not TB_C['Enabled'] or not triggerbotEnabled then return end
+        if isShutdown or not TB_C or not TB_C['Enabled'] then return end
         if not LocalPlayer.Character then return end
 
-        local hit = Mouse.Target
-        if not hit then return end
-
-        -- Check mode from config ('Target Mode' or 'Mode')
         local tbMode = TB_C['Target Mode'] or TB_C['Mode']
         local isTM = (tbMode == 'Target' or tbMode == 'Target Mode')
+
         if isTM then
-            local targetChar = (lockedPlayer and lockedPlayer.Character) or (camTarget and camTarget.Parent)
-            if not targetChar or (hit ~= targetChar and not hit:IsDescendantOf(targetChar)) then
+            -- TARGET MODE: Only fire when locked on via Q AND hovering over locked target's character
+            if not tbLocked or not tbTarget then return end
+
+            local char = tbTarget.Character
+            if not char then return end
+
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            if not hum or hum.Health <= 0 or clIsKnocked(char) or isTargetDead(tbTarget, "Triggerbot") then
+                tbLocked = false
+                tbTarget = nil
+                return
+            end
+
+            local hit = Mouse.Target
+            if not hit then return end
+
+            if hit ~= char and not hit:IsDescendantOf(char) then
                 return
             end
         else
-            -- Automatic Mode check
+            -- AUTOMATIC MODE: Fires when enabled and hovering over closest target
+            if not triggerbotEnabled then return end
+
+            local hit = Mouse.Target
+            if not hit then return end
+
             if not tbActive or not tbTarget then return end
             local char = tbTarget.Character
             if not char or (hit ~= char and not hit:IsDescendantOf(char)) then return end
