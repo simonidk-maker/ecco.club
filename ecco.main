@@ -1459,7 +1459,7 @@ do
             local tname = getTargetName()
 
             titleLbl.Visible = true
-            titleLbl.Text = string.format('<font color="%s">ecco.club</font>', TC)
+            titleLbl.Text = string.format('<font color="%s">@%s</font>', TC, LocalPlayer.Name)
 
             local activeFeatures = {}
             local function addFeat(name, status)
