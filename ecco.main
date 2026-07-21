@@ -2545,10 +2545,15 @@ UserInputService.InputBegan:Connect(function(input, processed)
         end
     end
 
-    -- Rapid Fire toggle
-    if RF_C['Enabled'] and Binds['Rapid Fire'] and kc == Enum.KeyCode[Binds['Rapid Fire']:upper()] then
+    -- Rapid Fire toggle keybind
+if RF_C['Enabled'] and Binds['Rapid Fire'] and kc == Enum.KeyCode[Binds['Rapid Fire']:upper()] then
+    -- Only toggle if NOT permanently enabled in table config
+    if not CFG['Rapid Fire']['Enabled'] then
         rapidFireEnabled = not rapidFireEnabled
+    else
+        rapidFireEnabled = true -- Keep locked ON
     end
+end
 
     -- Triggerbot toggle
     if TB_C['Enabled'] and Binds['Triggerbot'] and kc == Enum.KeyCode[Binds['Triggerbot']:upper()] then
