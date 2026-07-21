@@ -258,9 +258,8 @@ local RunService        = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Lighting          = game:GetService("Lighting")
 
-local task_wait = (task and task.wait) or wait
 local LocalPlayer = Players.LocalPlayer
-repeat task_wait() until LocalPlayer.Character
+repeat task.wait() until LocalPlayer.Character
 
 local Camera = workspace.CurrentCamera
 local Mouse  = LocalPlayer:GetMouse()
