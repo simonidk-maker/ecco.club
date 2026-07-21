@@ -1357,10 +1357,10 @@ do
         end
 
         -- HUD Elements
-        local titleLbl    = makeLabel(17, 0)
-        titleLbl.Font     = Enum.Font.GothamBold
+        local titleLbl    = makeLabel(15, 0)
+        titleLbl.Font     = Enum.Font.SourceSansBold
         local featuresLbl = makeLabel(14, 1)
-        featuresLbl.Font  = Enum.Font.GothamBold
+        featuresLbl.Font  = Enum.Font.SourceSansBold
 
         -- Dragging Logic
         titleLbl.Active = true
@@ -1470,16 +1470,16 @@ do
                 end
             end
 
-            if SA_C['Enabled'] then addFeat("Silent", currentTarget and tname) end
-            if CL_C['Enabled'] then addFeat("Camlock", camLocked and tname) end
-            if RF_C['Enabled'] and rapidFireEnabled then addFeat("Rapid") end
-            if SM_C['Enabled'] then addFeat("Spread") end
-            if SJ_C['Enabled'] and superJumpEnabled then addFeat("Jump") end
-            if SP_C['Enabled'] and spidermanEnabled then addFeat("Spider") end
-            if IR_C['Enabled'] then addFeat("Range") end
-            if SPD_C['Enabled'] and speedEnabled then addFeat("Speed") end
-            if TB_C['Enabled'] and triggerbotEnabled then addFeat("Trigger") end
-            if ESP_C['Enabled'] then addFeat("ESP") end
+            -- NEW CODE:
+if SA_C['Enabled'] then addFeat("Silent", currentTarget and tname) end
+if CL_C['Enabled'] then addFeat("Camlock", camLocked and tname) end
+-- (Rapid Fire and Range omitted from HUD GUI display)
+if SM_C['Enabled'] then addFeat("Spread") end
+if SJ_C['Enabled'] and superJumpEnabled then addFeat("Jump") end
+if SP_C['Enabled'] and spidermanEnabled then addFeat("Spider") end
+if SPD_C['Enabled'] and speedEnabled then addFeat("Speed") end
+if TB_C['Enabled'] and triggerbotEnabled then addFeat("Trigger") end
+if ESP_C['Enabled'] then addFeat("ESP") end
 
             if #activeFeatures > 0 then
                 featuresLbl.Visible = true
