@@ -2406,50 +2406,48 @@ end)
         end
     end)
 
-    -- Fire Loop - shoots when mouse hovers over target
-    RunService.Heartbeat:Connect(function()
-        if isShutdown or not TB_C or not TB_C['Enabled'] or not triggerbotEnabled then return end
+    -- Triggerbot Fire Loop
+RunService.Heartbeat:Connect(function()
+    if isShutdown or not TB_C or not TB_C['Enabled'] or not triggerbotEnabled then return end
+    if not LocalPlayer.Character then return end
+
+    local hit = Mouse.Target
+    if not hit then return end
+
+    -- TARGET MODE CHECK: Ensure hovering over the locked target
+    if TB_C['Mode'] == 'Target' then
+        local targetChar = (lockedPlayer and lockedPlayer.Character) or (camTarget and camTarget.Parent) or (tbTarget and tbTarget.Character)
+        if not targetChar or (hit ~= targetChar and not hit:IsDescendantOf(targetChar)) then
+            return
+        end
+    else
+        -- Automatic Mode check
         if not tbActive or not tbTarget then return end
-        if not LocalPlayer.Character then return end
-        
-        -- Check if mouse is hovering over the target
-        local hit = Mouse.Target
-        if not hit then return end
-        
         local char = tbTarget.Character
-        if not char then return end
-        
-        -- Check if mouse is on target's character
-        if hit ~= char and not hit:IsDescendantOf(char) then return end
-        
-        -- Use universal knocked check (works for both players and bots)
-        if clIsKnocked(char) then return end
-        
-        -- Check if target is dead
-        local hum = char:FindFirstChildOfClass("Humanoid")
-        if not hum or hum.Health <= 0 then return end
-        
-        local tool = LocalPlayer.Character:FindFirstChildWhichIsA('Tool')
-        if not tool then return end
-        
-        -- Check if tool is in weapons list
-        local function clean(s) return s:lower():gsub('[%[%]%- ]', '') end
-        local tn = clean(tool.Name)
-        local weaponAllowed = false
-        for _, w in ipairs(TB_C['Weapons'] or {}) do
-            if tn:find(clean(w), 1, true) then 
-                weaponAllowed = true
-                break 
-            end
+        if not char or (hit ~= char and not hit:IsDescendantOf(char)) then return end
+    end
+
+    -- Tool & weapon checks
+    local tool = LocalPlayer.Character:FindFirstChildWhichIsA('Tool')
+    if not tool then return end
+
+    local function clean(s) return s:lower():gsub('[%[%]%- ]', '') end
+    local tn = clean(tool.Name)
+    local weaponAllowed = false
+    for _, w in ipairs(TB_C['Weapons'] or {}) do
+        if tn:find(clean(w), 1, true) then 
+            weaponAllowed = true
+            break 
         end
-        if not weaponAllowed then return end
-        
-        local cd = TB_C['Cooldown'] or 0.01
-        if tick() - tbLastShot >= cd then
-            tool:Activate()
-            tbLastShot = tick()
-        end
-    end)
+    end
+    if not weaponAllowed then return end
+
+    local cd = TB_C['Cooldown'] or 0.01
+    if tick() - tbLastShot >= cd then
+        tool:Activate()
+        tbLastShot = tick()
+    end
+end)
 
 --  RAPID FIRE
 do
