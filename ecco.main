@@ -2300,7 +2300,7 @@ do
         end
     end)
 
-    -- ============================================================================
+-- ============================================================================
 -- GLOBAL LOCK ON KEYBIND (Silent Aim, Camera Lock, Triggerbot)
 -- ============================================================================
 UserInputService.InputBegan:Connect(function(input, gp)
@@ -2309,8 +2309,8 @@ UserInputService.InputBegan:Connect(function(input, gp)
     local lockBind = Binds['Lock On'] or Binds['Camera Lock'] or 'Q'
     if input.KeyCode ~= Enum.KeyCode[lockBind:upper()] then return end
 
-    -- Check if any system is currently locked
-    local isAnyLocked = saLocked or camLocked or (TB_C['Enabled'] and TB_C['Mode'] == 'Target' and triggerbotEnabled)
+    local tbMode = TB_C['Target Mode'] or TB_C['Mode']
+    local isAnyLocked = saLocked or camLocked or (TB_C['Enabled'] and tbMode == 'Target' and triggerbotEnabled)
 
     if isAnyLocked then
         -- UNLOCK ALL
@@ -2321,7 +2321,7 @@ UserInputService.InputBegan:Connect(function(input, gp)
         camLocked = false
         camTarget = nil
 
-        if TB_C['Mode'] == 'Target' then
+        if tbMode == 'Target' then
             triggerbotEnabled = false
         end
     else
@@ -2329,7 +2329,6 @@ UserInputService.InputBegan:Connect(function(input, gp)
         local targetPlayer = getClosestTarget()
         local camTargetPart = clFindClosest()
 
-        -- 1. Silent Aim Lock
         if SA_C['Enabled'] and SA_C['Mode'] ~= 'Automatic' then
             if targetPlayer then
                 saLocked = true
@@ -2337,7 +2336,6 @@ UserInputService.InputBegan:Connect(function(input, gp)
             end
         end
 
-        -- 2. Camera Lock (Aimbot)
         if CL_C['Enabled'] and CL_C['Target Mode'] ~= 'Automatic' then
             if camTargetPart then
                 camLocked = true
@@ -2345,7 +2343,6 @@ UserInputService.InputBegan:Connect(function(input, gp)
             end
         end
 
-        -- 3. Triggerbot Target Mode Activation
         if TB_C['Enabled'] then
             triggerbotEnabled = true
         end
