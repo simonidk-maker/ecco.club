@@ -2300,50 +2300,57 @@ do
         end
     end)
 
-    -- SA keybind — behaviour depends on mode
-    UserInputService.InputBegan:Connect(function(input, gp)
-        if gp or isShutdown then return end
-        local bind = Binds['Silent Aim']
-        if not bind or input.KeyCode ~= Enum.KeyCode[bind:upper()] then return end
+    -- ============================================================================
+-- GLOBAL LOCK ON KEYBIND (Silent Aim, Camera Lock, Triggerbot)
+-- ============================================================================
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp or isShutdown then return end
+    
+    local lockBind = Binds['Lock On'] or Binds['Camera Lock'] or 'Q'
+    if input.KeyCode ~= Enum.KeyCode[lockBind:upper()] then return end
 
-        if SA_C['Mode'] == 'Automatic' then
-            SA_C['Enabled'] = not SA_C['Enabled']
-            if not SA_C['Enabled'] then currentTarget = nil end
-        else
-            if saLocked then
-                saLocked = false; lockedPlayer = nil; currentTarget = nil
-            else
-                local tgt = getClosestTarget()
-                if tgt then
-                    saLocked     = true
-                    lockedPlayer = tgt
-                end
+    -- Check if any system is currently locked
+    local isAnyLocked = saLocked or camLocked or (TB_C['Enabled'] and TB_C['Mode'] == 'Target' and triggerbotEnabled)
+
+    if isAnyLocked then
+        -- UNLOCK ALL
+        saLocked = false
+        lockedPlayer = nil
+        currentTarget = nil
+
+        camLocked = false
+        camTarget = nil
+
+        if TB_C['Mode'] == 'Target' then
+            triggerbotEnabled = false
+        end
+    else
+        -- LOCK ALL ONTO CLOSEST TARGET
+        local targetPlayer = getClosestTarget()
+        local camTargetPart = clFindClosest()
+
+        -- 1. Silent Aim Lock
+        if SA_C['Enabled'] and SA_C['Mode'] ~= 'Automatic' then
+            if targetPlayer then
+                saLocked = true
+                lockedPlayer = targetPlayer
             end
         end
-    end)
 
-    -- Camlock keybind
-    UserInputService.InputBegan:Connect(function(input, gp)
-        if gp or isShutdown then return end
-        local bind = Binds['Camera Lock']
-        if not bind or input.KeyCode ~= Enum.KeyCode[bind:upper()] then return end
-
-        if CL_C['Target Mode'] == 'Automatic' then
-            CL_C['Enabled'] = not CL_C['Enabled']
-            if not CL_C['Enabled'] then camLocked = false; camTarget = nil end
-        else
-            if camLocked then
-                camLocked = false; camTarget = nil
-            else
-                local tgt = clFindClosest()
-                if tgt then
-                    camLocked = true
-                    camTarget = tgt
-                end
+        -- 2. Camera Lock (Aimbot)
+        if CL_C['Enabled'] and CL_C['Target Mode'] ~= 'Automatic' then
+            if camTargetPart then
+                camLocked = true
+                camTarget = camTargetPart
             end
         end
-    end)
-end
+
+        -- 3. Triggerbot Target Mode Activation
+        if TB_C['Enabled'] then
+            triggerbotEnabled = true
+        end
+    end
+end)
 
     --  TRIGGERBOT (Mouse-Based Implementation)
 
