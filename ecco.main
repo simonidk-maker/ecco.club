@@ -297,6 +297,18 @@ local spidermanEnabled  = false
 local flyEnabled        = false
 local flySpeed          = 0
 
+local function unlockAll()
+    saLocked       = false
+    lockedPlayer   = nil
+    currentTarget  = nil
+
+    camLocked      = false
+    camTarget      = nil
+
+    tbLocked       = false
+    tbTarget       = nil
+end
+
 -- BOT TARGETING SYSTEM
 -- Creates proxy player objects for bot models in workspace
 -- Bots support all features: Silent Aim, Camera Lock, ESP, Triggerbot, Hitbox Expander
@@ -2011,6 +2023,20 @@ do
             return
         end
 
+        -- UNIFIED DEATH & RESET CHECK FOR ALL LOCKED FEATURES
+        if saLocked or camLocked or tbLocked then
+            local mainT = lockedPlayer or tbTarget or (camTarget and camTarget.Parent and Players:GetPlayerFromCharacter(camTarget.Parent))
+            if not mainT then
+                unlockAll()
+            else
+                local char = mainT.Character
+                local hum = char and char:FindFirstChildOfClass("Humanoid")
+                if not char or not hum or hum.Health <= 0 or clIsKnocked(char) or isTargetDead(mainT, "Silent Aim") or isTargetDead(mainT, "Camera Lock") then
+                    unlockAll()
+                end
+            end
+        end
+
         if SA_C['Enabled'] then
             if SA_C['Mode'] == 'Automatic' then
                 -- always track whoever is closest in FOV
@@ -2022,17 +2048,11 @@ do
                     currentTarget = nil
                 end
             else -- 'Target' mode: track the locked player
-                if not saLocked or not lockedPlayer or isTargetDead(lockedPlayer, "Silent Aim") then
-                    saLocked = false; lockedPlayer = nil; currentTarget = nil
+                if saLocked and lockedPlayer then
+                    local _, part = getAimPosition(lockedPlayer)
+                    currentTarget = part
                 else
-                    local char = lockedPlayer.Character
-                    local hum  = char and char:FindFirstChildOfClass('Humanoid')
-                    if not char or not hum or hum.Health <= 0 then
-                        saLocked = false; lockedPlayer = nil; currentTarget = nil
-                    else
-                        local _, part = getAimPosition(lockedPlayer)
-                        currentTarget = part
-                    end
+                    currentTarget = nil
                 end
             end
         end
@@ -2050,14 +2070,9 @@ do
             end
 
             if camLocked and camTarget and not isHoldingKnife() then
-                local char = camTarget.Parent
-                local p = char and Players:GetPlayerFromCharacter(char)
-                if not char or clIsKnocked(char) or (p and isTargetDead(p, "Camera Lock")) then
-                    camLocked = false; camTarget = nil
-                else
-                    local hitPart = CL_C['Hit Part'] or 'HumanoidRootPart'
-                    local aimPart = (hitPart == 'Closest Part') and getClosestBodyPart(char)
-                                  or char:FindFirstChild(hitPart) or camTarget
+                local hitPart = CL_C['Hit Part'] or 'HumanoidRootPart'
+                local aimPart = (hitPart == 'Closest Part') and getClosestBodyPart(camTarget.Parent)
+                              or camTarget.Parent:FindFirstChild(hitPart) or camTarget
                     
                     if aimPart then
                         local pred    = CL_C['Prediction'] or {}
@@ -2372,8 +2387,6 @@ UserInputService.InputBegan:Connect(function(input, gp)
     end
 end)
 
-end
-
     --  TRIGGERBOT (Mouse-Based Implementation)
 
     local function tbFindTarget()
@@ -2548,6 +2561,17 @@ do
     end)
 end
 
+-- Auto unlock on player disconnect or local player respawn
+Players.PlayerRemoving:Connect(function(p)
+    if lockedPlayer == p or tbTarget == p or (camTarget and camTarget.Parent == p.Character) then
+        unlockAll()
+    end
+end)
+
+LocalPlayer.CharacterAdded:Connect(function()
+    unlockAll()
+end)
+
 --  KEYBINDS
 UserInputService.InputBegan:Connect(function(input, processed)
     if processed or isShutdown then return end
@@ -2558,11 +2582,7 @@ UserInputService.InputBegan:Connect(function(input, processed)
         isShutdown        = true
         speedEnabled      = false
         rapidFireEnabled  = false
-        currentTarget     = nil
-        saLocked          = false
-        lockedPlayer      = nil
-        camLocked         = false
-        camTarget         = nil
+        unlockAll()
         resetSpeed()
         pcall(function()
             setreadonly(shared._VanityGRM, false)
