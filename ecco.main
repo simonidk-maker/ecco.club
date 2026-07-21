@@ -1470,16 +1470,19 @@ do
                 end
             end
 
-            -- NEW CODE:
-if SA_C['Enabled'] then addFeat("Silent", currentTarget and tname) end
-if CL_C['Enabled'] then addFeat("Camlock", camLocked and tname) end
--- (Rapid Fire and Range omitted from HUD GUI display)
-if SM_C['Enabled'] then addFeat("Spread") end
-if SJ_C['Enabled'] and superJumpEnabled then addFeat("Jump") end
-if SP_C['Enabled'] and spidermanEnabled then addFeat("Spider") end
-if SPD_C['Enabled'] and speedEnabled then addFeat("Speed") end
-if TB_C['Enabled'] and triggerbotEnabled then addFeat("Trigger") end
-if ESP_C['Enabled'] then addFeat("ESP") end
+            if SA_C['Enabled'] then addFeat("Silent", currentTarget and tname) end
+            if CL_C['Enabled'] then addFeat("Camlock", camLocked and tname) end
+            -- (Rapid Fire and Range omitted from HUD GUI display)
+            if SM_C['Enabled'] then addFeat("Spread") end
+            if SJ_C['Enabled'] and superJumpEnabled then addFeat("Jump") end
+            if SP_C['Enabled'] and spidermanEnabled then addFeat("Spider") end
+            if SPD_C['Enabled'] and speedEnabled then addFeat("Speed") end
+            if TB_C['Enabled'] and triggerbotEnabled then
+                local tbMode = TB_C['Target Mode'] or TB_C['Mode']
+                local isTM = (tbMode == 'Target' or tbMode == 'Target Mode')
+                addFeat("Trigger", isTM and (currentTarget or camTarget) and tname)
+            end
+            if ESP_C['Enabled'] then addFeat("ESP") end
 
             if #activeFeatures > 0 then
                 featuresLbl.Visible = true
@@ -2310,7 +2313,8 @@ UserInputService.InputBegan:Connect(function(input, gp)
     if input.KeyCode ~= Enum.KeyCode[lockBind:upper()] then return end
 
     local tbMode = TB_C['Target Mode'] or TB_C['Mode']
-    local isAnyLocked = saLocked or camLocked or (TB_C['Enabled'] and tbMode == 'Target' and triggerbotEnabled)
+    local isTM = (tbMode == 'Target' or tbMode == 'Target Mode')
+    local isAnyLocked = saLocked or camLocked or (TB_C['Enabled'] and isTM and triggerbotEnabled)
 
     if isAnyLocked then
         -- UNLOCK ALL
@@ -2321,7 +2325,7 @@ UserInputService.InputBegan:Connect(function(input, gp)
         camLocked = false
         camTarget = nil
 
-        if tbMode == 'Target' then
+        if isTM then
             triggerbotEnabled = false
         end
     else
@@ -2343,8 +2347,10 @@ UserInputService.InputBegan:Connect(function(input, gp)
             end
         end
 
-        if TB_C['Enabled'] then
-            triggerbotEnabled = true
+        if TB_C['Enabled'] and isTM then
+            if targetPlayer or camTargetPart then
+                triggerbotEnabled = true
+            end
         end
     end
 end)
@@ -2415,8 +2421,9 @@ end
 
         -- Check mode from config ('Target Mode' or 'Mode')
         local tbMode = TB_C['Target Mode'] or TB_C['Mode']
-        if tbMode == 'Target' then
-            local targetChar = (lockedPlayer and lockedPlayer.Character) or (camTarget and camTarget.Parent) or (tbTarget and tbTarget.Character)
+        local isTM = (tbMode == 'Target' or tbMode == 'Target Mode')
+        if isTM then
+            local targetChar = (lockedPlayer and lockedPlayer.Character) or (camTarget and camTarget.Parent)
             if not targetChar or (hit ~= targetChar and not hit:IsDescendantOf(targetChar)) then
                 return
             end
