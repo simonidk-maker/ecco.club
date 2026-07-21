@@ -2349,6 +2349,8 @@ UserInputService.InputBegan:Connect(function(input, gp)
     end
 end)
 
+end
+
     --  TRIGGERBOT (Mouse-Based Implementation)
 
     local function tbFindTarget()
