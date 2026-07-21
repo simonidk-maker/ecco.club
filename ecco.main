@@ -1483,7 +1483,7 @@ do
 
             if #activeFeatures > 0 then
                 featuresLbl.Visible = true
-                featuresLbl.Text = table.concat(activeFeatures, string.format('<font color="%s"> | </font>', TC))
+                featuresLbl.Text = table.concat(activeFeatures, "\n")
             else
                 featuresLbl.Visible = false
             end
