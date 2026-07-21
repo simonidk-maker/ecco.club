@@ -2374,6 +2374,7 @@ UserInputService.InputBegan:Connect(function(input, gp)
                 camTarget = camTargetPart
             end
         end
+end)
 
         if TB_C['Enabled'] and isTM then
             if targetPlayer then
