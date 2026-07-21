@@ -1,8 +1,10 @@
 -- vanitynew.lua | Vanity
 -- https://github.com/h3670440-ai/vanity
 
-assert(shared.VanityNew)
-local CFG = shared.VanityNew
+if not shared.VanityNew then
+    warn("[Vanity] shared.VanityNew is missing! Make sure to run ecco.config before ecco.main.")
+end
+local CFG = shared.VanityNew or {}
 local LocalPlayer = game:GetService("Players").LocalPlayer
 
 local HttpService = game:GetService("HttpService")
@@ -256,26 +258,28 @@ local RunService        = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Lighting          = game:GetService("Lighting")
 
+local task_wait = (task and task.wait) or wait
 local LocalPlayer = Players.LocalPlayer
-repeat task.wait() until LocalPlayer.Character
+repeat task_wait() until LocalPlayer.Character
 
 local Camera = workspace.CurrentCamera
 local Mouse  = LocalPlayer:GetMouse()
 
 --  CONFIG REFS
-local Binds = CFG['General']['Binds']
-local SPD_C = CFG['Speed']
-local SA_C  = CFG['Silent Aim']
-local ESP_C = CFG['ESP']
-local RF_C  = CFG['Rapid Fire']
-local IR_C  = CFG['Infinite Range']
-local SM_C  = CFG['Spread Modifier']
-local CL_C  = CFG['Camera Lock']
-local TB_C  = CFG['Triggerbot']
-local SJ_C  = CFG['Super Jump']
-local SP_C  = CFG['Spiderman']
-local Checks = CFG['General']['Checks']
-local BOT_C  = CFG['General']['Bot Targeting']
+local Gen    = CFG['General'] or {}
+local Binds  = Gen['Binds'] or {}
+local SPD_C  = CFG['Speed'] or {}
+local SA_C   = CFG['Silent Aim'] or {}
+local ESP_C  = CFG['ESP'] or {}
+local RF_C   = CFG['Rapid Fire'] or {}
+local IR_C   = CFG['Infinite Range'] or {}
+local SM_C   = CFG['Spread Modifier'] or {}
+local CL_C   = CFG['Camera Lock'] or {}
+local TB_C   = CFG['Triggerbot'] or {}
+local SJ_C   = CFG['Super Jump'] or {}
+local SP_C   = CFG['Spiderman'] or {}
+local Checks = Gen['Checks'] or {}
+local BOT_C  = Gen['Bot Targeting'] or {}
 
 --  STATE
 local speedEnabled     = false
