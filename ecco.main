@@ -2104,7 +2104,6 @@ do
                         
                         Camera.CFrame = (lerpAlpha >= 1) and targetCF or Camera.CFrame:Lerp(targetCF, lerpAlpha)
                     end
-                end
             end
         end
     end)
@@ -2374,7 +2373,6 @@ UserInputService.InputBegan:Connect(function(input, gp)
                 camTarget = camTargetPart
             end
         end
-end)
 
         if TB_C['Enabled'] and isTM then
             if targetPlayer then
@@ -2518,6 +2516,7 @@ end)
             tbLastShot = tick()
         end
     end)
+end -- close Silent Aim do block
 
 --  RAPID FIRE
 do
